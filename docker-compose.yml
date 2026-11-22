@@ -1,0 +1,41 @@
+﻿services:
+  db:
+    image: postgres:16
+    container_name: odoo_postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data
+    networks:
+      - odoo-internal
+
+  odoo:
+    image: odoo:19.0
+    container_name: odoo_app
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "127.0.0.1:8069:8069"
+      - "127.0.0.1:8072:8072"
+    environment:
+      - HOST=db
+      - USER=${POSTGRES_USER}
+      - PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - odoo-web-data:/var/lib/odoo
+      - ./config:/etc/odoo
+      - ./custom_addons:/mnt/extra-addons
+    networks:
+      - odoo-internal
+
+volumes:
+  odoo-db-data:
+  odoo-web-data:
+
+networks:
+  odoo-internal:
+    driver: bridge
